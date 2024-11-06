@@ -1,5 +1,15 @@
 import requests
 
+class Data:
+    def __init__(self, field_names, field_values):
+        if isinstance(field_names, list) and isinstance(field_values, list):
+            if len(field_names) != len(field_values):
+                raise ValueError(f"Lists dont match in size! Field name list size: {len(field_names)}, field values list size: {len(field_values)}")
+            self.data = dict(zip(field_names,field_values))
+        elif isinstance(field_names, str) and not isinstance(field_values, list):
+            self.data = {field_names : field_values}
+        else:
+            raise ValueError("Both need to be lists of same size or single element objects/types.")
 
 class Request:
     def __init__(self, site, auth):
@@ -11,6 +21,12 @@ class Request:
         url = f"{self.site}/{api_url}"
         self.response = requests.get(url, headers=self.auth, verify=False)
         if self.response.status_code != 200:
+            print(f"Error! ({self.response.status_code})")
+
+    def postAPIResponse(self,api_url,data):
+        url = f"{self.site}/{api_url}"
+        self.response = requests.post(url,data=data, headers=self.auth, verify=False)
+        if self.response.status_code != 201 and self.response.status_code != 200:
             print(f"Error! ({self.response.status_code})")
 
     def prettifyResponse(self, size = 10):
@@ -51,6 +67,11 @@ def main():
 
     req.getAPIResponse("/todos")
     req.prettifyResponse(3)
+
+    print("-------------------------New  User----------------------------")
+
+    req_data = Data(["name", "email", "gender"], ["John Doe", "JohnDoe@example.test", "male"])
+    req.postAPIResponse("/users", req_data.data)
 
 if __name__ == "__main__":
     main()
