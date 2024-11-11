@@ -65,7 +65,7 @@ class Request:
         else:
             return self.response.json()["data"][0][field_name]
 
-    def prettifyResponse(self, size = 10):
+    def prettifyResponse(self, size = 100):
         if self.response.status_code == 200:
             meta = self.response.json()["meta"]
             print("pagination:")
@@ -108,19 +108,21 @@ def main():
     req.getAPIResponse("/todos")
     req.prettifyResponse(3)
 
-    print("-------------------------New  User----------------------------")
+    #print("-------------------------New  User----------------------------")
 
-    req_data = Data(["name","email","gender","status"],["John Doe Sr","John_DoeSr@test.example","male","active"])
-    req.postAPIResponse("/users",req_data.data)
-    req.validateResponse("/users")
+    #req_data = Data(["name","email","gender","status"],["John Doe Sr","John_DoeSr@test.example","male","active"])
+    #req.postAPIResponse("/users",req_data.data)
+    #req.validateResponse("/users")
 
 
-    req.getAPIResponse("/users", list(req_data.data.keys()), list(req_data.data.values()))
-    req.prettifyResponse()
+    #req.getAPIResponse("/users", list(req_data.data.keys()), list(req_data.data.values()))
+    #req.prettifyResponse()
 
     print("-------------------------Find User----------------------------")
     print(f"Id:{req.returnField("/users","name","John Doe Sr","id")}")
 
-
+    print("-----------------------Active Users---------------------------")
+    req.getAPIResponse("/users",["per_page","status"],["20","active"])
+    req.prettifyResponse()
 if __name__ == "__main__":
     main()
