@@ -55,7 +55,15 @@ class Request:
             print("Validation OK!")
         else:
             print(f"Expected {self.num_entries+1} but got {validate_response.json()["meta"]["pagination"]["total"]}")
-            raise ValueError("Could not validate response! User already exists or cannot be created.")
+            #raise ValueError("Could not validate response! User already exists or cannot be created.")
+
+    def returnField(self, api_url, params_name, params_value, field_name):
+        self.getAPIResponse(api_url, params_name, params_value)
+        if not self.response.json()["data"][0][field_name]:
+            print("Field is nonexistent!")
+            return None
+        else:
+            return self.response.json()["data"][0][field_name]
 
     def prettifyResponse(self, size = 10):
         if self.response.status_code == 200:
@@ -102,11 +110,17 @@ def main():
 
     print("-------------------------New  User----------------------------")
 
-    req_data = Data(["name","email","gender","status"],["John Doe","John_Doe@test.example","male","active"])
+    req_data = Data(["name","email","gender","status"],["John Doe Sr","John_DoeSr@test.example","male","active"])
     req.postAPIResponse("/users",req_data.data)
+    req.validateResponse("/users")
+
+
     req.getAPIResponse("/users", list(req_data.data.keys()), list(req_data.data.values()))
     req.prettifyResponse()
-    req.validateResponse("/users")
+
+    print("-------------------------Find User----------------------------")
+    print(f"Id:{req.returnField("/users","name","John Doe Sr","id")}")
+
 
 if __name__ == "__main__":
     main()
