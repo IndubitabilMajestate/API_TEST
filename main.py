@@ -1,6 +1,6 @@
 import requests
-import warnings
-warnings.filterwarnings("ignore", category=requests.packages.urllib3.exceptions.InsecureRequestWarning)
+from warnings import filterwarnings
+filterwarnings("ignore", category=requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 class Data:
     def __init__(self, field_names, field_values):
@@ -65,13 +65,34 @@ class Request:
         else:
             return self.response.json()["data"][0][field_name]
 
-    def prettifyResponse(self, size = 100):
+    def returnMiddleNameUsers(self, api_url, num_entries):
+        users = []
+        found_users = 0
+        current_page = 1
+        self.getAPIResponse(api_url, ["page","per_page"], [f"{current_page}",f"{num_entries}"])
+        if self.response.status_code != 200:
+            print(f"Error processing request!(code: {self.response.status_code}")
+            return users
+        while found_users < num_entries:
+            for user in self.response.json()["data"]:
+                if len(user["name"].split()) == 3:
+                    users.append(user)
+                    found_users += 1
+                    if found_users == num_entries:
+                        return users
+            current_page +=1
+            self.getAPIResponse(api_url, ["page", "per_page"], [f"{current_page}", f"{num_entries}"])
+        return users
+
+
+    def prettifyResponse(self, size = 100, include_pag = False, ext_data = None):
         if self.response.status_code == 200:
-            meta = self.response.json()["meta"]
-            print("pagination:")
-            for field in meta["pagination"]:
-                print(f"\t-{field}:{meta["pagination"][field]}")
-            data = self.response.json()["data"]
+            if include_pag:
+                meta = self.response.json()["meta"]
+                print("pagination:")
+                for field in meta["pagination"]:
+                    print(f"\t-{field}:{meta["pagination"][field]}")
+            data = ext_data if ext_data is not None else self.response.json()["data"]
             print("\n data:\n")
             for data_index in range(min(size,len(data))):
                 for field in data[data_index]:
@@ -124,5 +145,10 @@ def main():
     print("-----------------------Active Users---------------------------")
     req.getAPIResponse("/users",["per_page","status"],["20","active"])
     req.prettifyResponse()
+
+    print("---------------------Middle Name Users------------------------")
+    data = req.returnMiddleNameUsers("/users",10)
+    req.prettifyResponse(ext_data=data)
+
 if __name__ == "__main__":
     main()
